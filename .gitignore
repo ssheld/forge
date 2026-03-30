@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Local tool state
+.forge/
+
+# Private sidecar notes and experiments
+.private/
+notes-private/
+scratch/
+
+# Editor and OS noise
+.DS_Store
+.idea/
+.vscode/
