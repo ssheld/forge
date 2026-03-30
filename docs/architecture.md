@@ -71,20 +71,14 @@ expected for run metadata and resumability.
 
 ### Review Orchestration
 
-Forge manages code review dispatch in two phases:
+In v1, Forge dispatches a local reviewer on the same machine after an
+agent finishes implementing in a worktree. The reviewer is read-only
+(tool guards, not just prompt instructions). The reviewer model is
+configurable per repo.
 
-- **Phase 1 (pre-PR):** After an agent finishes implementing in a worktree,
-  Forge dispatches a local reviewer on the same machine before creating a
-  PR. The reviewer is read-only (tool guards, not just prompt instructions).
-  PRs arrive on GitHub already reviewed.
-- **Phase 2 (post-PR, multi-node):** Once a PR exists on GitHub, Forge
-  detects it (polling or webhook) and dispatches a reviewer on any
-  available node. Review is posted to GitHub with full provenance. This
-  enables hardware modularity (e.g., Jetson implements, MBP reviews).
-
-The human owner remains the final merge gatekeeper in both phases.
-
-See [docs/review-orchestration.md](review-orchestration.md) for the full
+Post-PR review with GitHub provenance and multi-node dispatch is planned
+as a follow-on extension. See
+[docs/review-orchestration.md](review-orchestration.md) for the full
 design and research context, and
 [DEC-001](decisions/DEC-001-review-stage-phasing.md) for the decision
 record.

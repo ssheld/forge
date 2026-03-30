@@ -209,15 +209,22 @@ Agent creates PR (from any node)
 
 ### Why Both
 
-Phase 1 pre-PR review acts as a **local lint pass** -- quick, catches
-garbage before it hits GitHub. Phase 2 post-PR review is the **real
-review** -- thorough, potentially on better hardware, visible in the
-review trail. The human owner remains the final gatekeeper on merge
-approval in both phases.
+Phase 1 is simpler to ship (no event infrastructure) and catches issues
+before they hit GitHub. Phase 2 adds GitHub provenance (visible review
+trail) and multi-node hardware support.
 
 Phase 1 requires implementer and reviewer on the same machine. Phase 2
 uses GitHub as the coordination layer between nodes, which is where the
 hardware modularity kicks in.
+
+Open design questions:
+- Whether Phase 1 review blocks PR creation or is advisory-only
+- How the two phases interact when both are active (e.g., does Phase 2
+  repeat work that Phase 1 already did?)
+- Whether the reviewer's authority level is policy-configurable per repo
+
+These will be resolved during implementation rather than prematurely
+locked down.
 
 ## Event Detection (Phase 2)
 
