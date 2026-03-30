@@ -175,8 +175,7 @@ decision record.
 ```
 Agent implements in worktree
   -> Forge runs local review (same machine)
-  -> Review passes: Forge creates PR
-  -> Review fails: Forge routes feedback to implementing agent
+  -> Forge acts on review findings (exact behavior TBD -- see below)
 ```
 
 - No event infrastructure needed (no webhooks, no polling)
@@ -185,7 +184,9 @@ Agent implements in worktree
 - Easy to swap reviewer models (point at a different provider)
 - Inspired by [Overstory's](https://github.com/jayminwest/overstory)
   pre-PR review model with SQLite mail coordination
-- PRs arrive on GitHub already reviewed, higher quality
+
+Whether Phase 1 review blocks PR creation or is advisory-only is an
+open design question tracked in [issue #6](https://github.com/ssheld/forge/issues/6).
 
 ### Phase 2: Post-PR Review (Multi-Node, GitHub Provenance)
 
