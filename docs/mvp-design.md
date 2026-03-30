@@ -250,17 +250,40 @@ These can be JSON or Markdown-backed, but their shape should be stable.
 - dispatch to selected provider
 - capture outputs and artifacts
 
-### Review
+### Review (Phased -- see [DEC-001](decisions/DEC-001-review-stage-phasing.md))
 
-- collect review feedback
-- normalize it into a structured report
-- identify whether the PR is merge-ready or needs fixes
+Review is implemented in two phases:
+
+**Phase 1 -- Pre-PR review (MVP, local):**
+- implementing agent signals done
+- Forge dispatches a local reviewer on the same machine
+- reviewer is read-only (tool guards enforce this, not just prompts)
+- reviewer produces a structured `ReviewReport`
+- on pass: Forge creates the PR
+- on fail: Forge routes findings to the implementing agent (enters Fix stage)
+- reviewer model is configurable per repo (Claude, Codex, Qwen, etc.)
+- no event infrastructure needed -- Forge controls the full loop
+
+**Phase 2 -- Post-PR review (multi-node, GitHub provenance):**
+- implementing agent creates a PR (possibly from a different machine)
+- Forge detects the PR via polling (`gh pr list`) or optional webhook
+- Forge dispatches a reviewer on any available node
+- reviewer posts findings to GitHub with full provenance (severity labels,
+  confidence scores, structured format per AGENTS.md/CLAUDE.md)
+- enables hardware modularity: e.g., Jetson Orin implements, MBP reviews
+- GitHub becomes the coordination substrate between nodes
+
+The human owner remains the final merge gatekeeper in both phases.
+
+See [docs/review-orchestration.md](review-orchestration.md) for the full
+design, research context, and landscape analysis.
 
 ### Fix
 
 - route review findings back to the implementation provider
 - rerun checks as needed
 - update run state
+- capped revision rounds (e.g., 3 attempts before escalation to human)
 
 ### Merge-Ready
 
