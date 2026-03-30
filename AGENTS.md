@@ -90,19 +90,13 @@ Preferred format for PR review summaries:
 - Include verification evidence.
 - Note any remaining risks or intentionally deferred follow-up work.
 
-## What We Brought Over From Agent-Vault
+## Default Build Direction
 
-Useful concepts retained here:
+Until the repo records a different decision:
 
-- explicit workflow steps
-- verification before completion
-- human decision gate for material trade-offs
-- clear GitHub attribution for agent-authored posts
-
-Concepts intentionally excluded from this repo:
-
-- daily notes
-- session logs
-- handoff files
-- long-lived scratchpads
-- repo-internal memory sprawl
+- Build a thin local CLI first.
+- Prefer plain Python and straightforward subprocess/file orchestration.
+- Use git worktrees and GitHub as the durable workflow substrate.
+- Keep provider integrations behind small adapters.
+- Do not introduce LangGraph or another workflow engine unless the simpler
+  controller demonstrably stops scaling.
