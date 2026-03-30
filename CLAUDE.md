@@ -1,8 +1,9 @@
 # CLAUDE.md
 
-This file is the single source of truth for agent behavior in this repository.
-`AGENTS.md` and `CLAUDE.md` are intentional mirrors (identical after line 1).
-A CI workflow enforces that the two files stay in sync.
+Agent policy for this repository. `AGENTS.md` and `CLAUDE.md` are intentional
+mirrors (identical after line 1). Neither file is canonical over the other --
+edit either one and update the other to match. A CI workflow enforces that
+the two files stay in sync.
 
 ## Purpose
 

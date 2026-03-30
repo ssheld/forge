@@ -13,6 +13,18 @@ jobs:
 
       - name: Verify AGENTS.md and CLAUDE.md are mirrored
         run: |
+          # Guard: both files must exist
+          missing=0
+          for f in AGENTS.md CLAUDE.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f is missing."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
           # Both files must be identical after line 1
           # (line 1 is the heading: "# AGENTS.md" vs "# CLAUDE.md")
           if ! diff <(tail -n +2 AGENTS.md) <(tail -n +2 CLAUDE.md) > /dev/null 2>&1; then
