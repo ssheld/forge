@@ -297,9 +297,15 @@ that compose into a pipeline:
 |---|---|---|
 | **Planner** | Reads roadmap/issues, generates implementation briefs | Manual or periodic |
 | **Executor** | Picks ready work item, dispatches agent in worktree | Manual or periodic |
-| **Reviewer** | Reviews implementation, scores, produces ReviewReport | Executor completion or PR detection |
-| **Fixer** | Routes findings to implementing agent, re-verifies | Reviewer findings |
+| **Reviewer** | Reviews implementation, scores, runs fix loop, produces ReviewReport | Executor completion or PR detection |
 | **Merger** | Checks gates, merges, rebases remaining PRs | Manual or periodic |
+
+Note: earlier research considered a separate **Fixer** job, but the v1
+decomposition folds the fix loop into the Reviewer. Review and fix are
+tightly coupled in every working implementation studied (night-watch
+handles fix retries within the reviewer, Overstory handles fix cycles
+within the lead's Phase 3). The fix logic can be extracted into a
+separate job later if needed.
 
 ### Why Jobs, Not a Rigid Pipeline
 
