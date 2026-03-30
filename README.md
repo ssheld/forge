@@ -38,3 +38,12 @@ See [docs/architecture.md](docs/architecture.md) and
 [docs/roadmap.md](docs/roadmap.md) for the current working plan, and
 [docs/mvp-design.md](docs/mvp-design.md) for the explicit MVP scope and
 north-star relationship.
+
+## Project Docs
+
+- `AGENTS.md` / `CLAUDE.md` — mirrored agent policy files (CI-enforced);
+  contain coding standards, project commands, PR authoring rules, and review
+  format templates
+- `.github/pull_request_template.md` — GitHub auto-fills this into every PR
+- `docs/decisions/` — durable architectural and workflow decisions
+  (see `template.md` for the expected format)

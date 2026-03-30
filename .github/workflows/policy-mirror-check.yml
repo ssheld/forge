@@ -1,0 +1,26 @@
+name: Policy mirror check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check-mirrors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify AGENTS.md and CLAUDE.md are mirrored
+        run: |
+          # Both files must be identical after line 1
+          # (line 1 is the heading: "# AGENTS.md" vs "# CLAUDE.md")
+          if ! diff <(tail -n +2 AGENTS.md) <(tail -n +2 CLAUDE.md) > /dev/null 2>&1; then
+            echo "::error::AGENTS.md and CLAUDE.md have drifted."
+            echo ""
+            echo "These files must be identical after line 1."
+            echo "Diff:"
+            diff <(tail -n +2 AGENTS.md) <(tail -n +2 CLAUDE.md) || true
+            exit 1
+          fi
+          echo "AGENTS.md and CLAUDE.md are in sync."
