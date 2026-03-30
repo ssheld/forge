@@ -250,17 +250,34 @@ These can be JSON or Markdown-backed, but their shape should be stable.
 - dispatch to selected provider
 - capture outputs and artifacts
 
-### Review
+### Review (MVP: Pre-PR Local Review)
 
-- collect review feedback
-- normalize it into a structured report
-- identify whether the PR is merge-ready or needs fixes
+The MVP review stage is local and pre-PR:
+
+- implementing agent signals done
+- Forge dispatches a local reviewer on the same machine
+- reviewer is read-only (tool guards enforce this, not just prompts)
+- reviewer produces a structured `ReviewReport`
+- reviewer model is configurable per repo (Claude, Codex, Qwen, etc.)
+- no event infrastructure needed -- Forge controls the full loop
+
+Open design question: whether pre-PR review blocks PR creation or is
+advisory-only. This will be resolved during implementation. See
+[DEC-001](decisions/DEC-001-review-stage-phasing.md) for context.
+
+Post-PR review with GitHub provenance and multi-node dispatch is the
+planned Phase 2 extension. See
+[docs/review-orchestration.md](review-orchestration.md) for the full
+design, research context, and landscape analysis.
+
+The human owner remains the final merge gatekeeper regardless of phase.
 
 ### Fix
 
 - route review findings back to the implementation provider
 - rerun checks as needed
 - update run state
+- capped revision rounds (e.g., 3 attempts before escalation to human)
 
 ### Merge-Ready
 
