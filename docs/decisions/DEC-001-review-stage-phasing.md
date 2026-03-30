@@ -48,9 +48,9 @@ Two fundamentally different review architectures exist:
     more complex to implement, PRs hit GitHub before review
 - Option C: Both, phased
   - Benefits: Phase 1 is simple to ship, Phase 2 adds provenance and
-    multi-node. Pre-PR acts as lint pass, post-PR is the real review.
-  - Risks / trade-offs: Two review systems to maintain, potential
-    confusion about which review is authoritative
+    multi-node.
+  - Risks / trade-offs: Two review systems to maintain, review authority
+    semantics need a separate decision
 
 ## Decision
 - Outcome: Option C -- both, phased. Pre-PR review in Phase 1, post-PR
@@ -62,8 +62,9 @@ Two fundamentally different review architectures exist:
 - Positive: Phase 1 stays simple (no event infrastructure), Phase 2
   unlocks multi-node hardware modularity and GitHub provenance. Human
   owner remains final gatekeeper in both phases.
-- Negative: Two review systems to maintain long-term. Need clear policy
-  about which review is authoritative when they disagree.
+- Negative: Two review systems to maintain long-term. Review authority
+  semantics (blocking vs advisory, which phase is authoritative) are
+  intentionally deferred -- tracked in issue #6.
 
 ## Sources
 - [Review Orchestration Design Doc](../review-orchestration.md)
@@ -74,8 +75,15 @@ Two fundamentally different review architectures exist:
 - [night-watch-cli](https://github.com/jonit-dev/night-watch-cli) --
   cron-based polling + worktree dispatch
 
+## Scope Note
+
+This decision covers **phasing only** -- which review architecture to
+build first. It does not settle review authority semantics (blocking vs
+advisory, which phase is authoritative when both are active). Those
+questions are intentionally deferred and tracked in issue #6.
+
 ## Follow-Up
-- [ ] Tighten mvp-design.md Review stage with phased approach
 - [ ] Define reviewer isolation mechanism (tool guards vs prompt-only)
 - [ ] Decide polling vs webhook for Phase 2 event detection
 - [ ] Define reviewer model preferences per repo
+- [ ] Resolve review authority semantics (issue #6)
