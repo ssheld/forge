@@ -1,6 +1,9 @@
 # AGENTS.md
 
-This repository intentionally keeps agent guidance lean and public-safe.
+Agent policy for this repository. `AGENTS.md` and `CLAUDE.md` are intentional
+mirrors (identical after line 1). Neither file is canonical over the other --
+edit either one and update the other to match. A CI workflow enforces that
+the two files stay in sync.
 
 ## Purpose
 
@@ -56,6 +59,79 @@ Raise the decision to the owner when the choice would materially affect:
 
 Routine local implementation details do not need escalation.
 
+## Default Build Direction
+
+Until the repo records a different decision:
+
+- Build a thin local CLI first.
+- Prefer plain Python and straightforward subprocess/file orchestration.
+- Use git worktrees and GitHub as the durable workflow substrate.
+- Keep provider integrations behind small adapters.
+- Do not introduce LangGraph or another workflow engine unless the simpler
+  controller demonstrably stops scaling.
+
+## Coding Standards
+
+### Core Principles
+- Prefer simple, testable designs.
+- Keep changes minimal and coherent.
+- Preserve backward compatibility unless explicitly planned.
+
+### Readability
+- Prefer explicit, readable structure over compact or clever code.
+- Avoid high-density control flow such as nested ternaries.
+- Remove comments that only restate what the code makes obvious.
+- Keep useful abstractions, but remove accidental or redundant ones when
+  doing so clarifies the code without widening scope.
+
+### Language and Framework Conventions
+- Primary language: Python (per Default Build Direction).
+- Use explicit, domain-oriented names over abbreviations.
+- Match terms used in `README.md` and user-facing docs.
+- Prefer explicit failure states over silent fallbacks.
+- Keep logs actionable, structured when possible, and include failure context.
+- Prioritize correctness and maintainability first; add performance budgets
+  once critical paths are identified.
+
+### Testing Standards
+- Treat test-driven development as the default for behavior-changing code.
+- Use RED / GREEN / REFACTOR when practical.
+- For bug fixes, start with a reproducing test when practical.
+- If test-first is not realistic, state why and add coverage before merge.
+- Default coverage floor: 80% when the repo has coverage tooling.
+
+### Code Review Checklist
+- [ ] Matches project architecture and naming conventions.
+- [ ] Keeps code readable without dense or clever control flow.
+- [ ] Includes tests for changed behavior.
+- [ ] Updates docs when behavior changes.
+- [ ] No unrelated changes.
+
+## Project Commands
+
+Setup, test, and operational commands for this repository. Update this
+section when the canonical workflow changes.
+
+### Setup
+```bash
+# No setup commands yet -- update when the CLI is bootstrapped.
+```
+
+### Test Commands
+```bash
+# No test commands yet -- update when test infrastructure exists.
+```
+
+### Development / Run Commands
+```bash
+# No dev commands yet -- update when the CLI entrypoint exists.
+```
+
+### Release / Operations Commands
+```bash
+# No release commands yet -- update when packaging or deploy exists.
+```
+
 ## Verification Loop
 
 Before reporting substantive work as complete:
@@ -64,6 +140,10 @@ Before reporting substantive work as complete:
 2. Run any available static checks or linting relevant to the change.
 3. Review the diff for accidental edits, debug leftovers, and doc drift.
 4. State clearly what was verified and what was not.
+5. If a step is unavailable or not meaningful for the repo, say so explicitly
+   instead of implying it ran.
+
+Use the project commands above when available.
 
 ## GitHub Attribution
 
@@ -83,20 +163,134 @@ Preferred format for PR review summaries:
 > 🤖 **Review by {Model Name}** · via {Client Tool}
 ```
 
-## Pull Request Expectations
+## PR Authoring Standards
 
-- Keep pull requests coherent and scoped to one logical change.
-- Include a real summary, not a one-line placeholder.
-- Include verification evidence.
-- Note any remaining risks or intentionally deferred follow-up work.
+- When creating a pull request, include a complete PR body; do not open with
+  a one-line summary only.
+- Use `.github/pull_request_template.md` when present.
+- Use an imperative, outcome-focused title that reflects the actual change
+  scope.
+- Keep PR scope coherent; split unrelated work into separate PRs.
+- Prefer opening as draft until validation is complete, unless the user asks
+  otherwise.
+- PR body must include:
+  - Summary of problem and approach.
+  - Files/areas changed with concise rationale.
+  - Verification Loop evidence (commands run, outcomes, skipped steps).
+  - Risks, rollback considerations, and any residual gaps.
+  - Explicit docs consistency note (`docs/architecture.md`/`README.md`
+    updated or no impact).
+- If any Verification Loop step was not run, explicitly state why and what
+  remains unverified.
+- If the PR addresses review feedback, include itemized mapping per the
+  review feedback response format below.
 
-## Default Build Direction
+## Review Format
 
-Until the repo records a different decision:
+### Review Transport
+- Prefer a formal GitHub PR review whenever the platform/API allows it.
+- Use a standalone PR conversation comment only as fallback when a formal
+  review cannot be submitted.
+- Use inline review comments only for actual file/line-specific findings.
 
-- Build a thin local CLI first.
-- Prefer plain Python and straightforward subprocess/file orchestration.
-- Use git worktrees and GitHub as the durable workflow substrate.
-- Keep provider integrations behind small adapters.
-- Do not introduce LangGraph or another workflow engine unless the simpler
-  controller demonstrably stops scaling.
+### Canonical Templates
+
+**Formal PR review body**
+```md
+> 🤖 **Review by {Model Name}** · via {Client Tool}
+
+1. `path/to/file.py:123`
+
+   **Recommended** · High confidence — Brief finding title.
+   Short explanation.
+
+## Strengths
+- ...
+
+## Merge Recommendation
+{Approve | Approve with Changes | Request Changes}
+
+## Top Risks
+- ...
+
+## Suggested Additional Tests
+- ...
+```
+
+**Inline review comment**
+```md
+🤖 `{Model Name}`
+
+**Recommended** · High confidence — Brief finding title.
+Short explanation.
+```
+
+**Review feedback response**
+```md
+> 🤖 **Feedback response by {Model Name}** · via {Client Tool}
+
+| # | Finding | Status | Evidence / Rationale |
+|---|---------|--------|----------------------|
+| 1 | ... | Resolved | `abc1234`; `path/to/file`; what changed |
+| 2 | ... | Not Changed | why, risk/tradeoff, decision needed |
+
+## Remaining Items
+- ...
+```
+
+### Severity Labels
+- Critical — must fix before merge (blocks merge)
+- Recommended — strong improvement (should fix before merge)
+- Optional — minor suggestion
+
+### Confidence Indicators
+- High confidence (80-100) — certain this is a bug or vulnerability
+- Medium confidence (50-79) — likely an issue, but context-dependent
+- Low confidence (0-49) — stylistic or speculative
+
+Suppress findings scoring below 80 from the posted review by default.
+Include sub-80 findings only if they represent a security or data-safety risk.
+
+### Do Not Flag
+- Purely stylistic formatting preferences (handled by linters)
+- Import ordering
+- Minor naming disagreements that do not affect clarity
+- TODOs already tracked in issues
+- Changes in files outside the PR diff
+- Pre-existing issues not introduced by the PR; use git blame to distinguish
+  inherited code from new changes
+- Issues that linters, formatters, or type checkers already catch
+- Nitpicks with no functional, security, or maintainability impact
+
+### Review Posting Checklist
+Before posting any review, verify:
+- The correct transport was used (formal review when available)
+- The attribution header is present with actual model/version
+- Findings appear first, ordered by severity
+- Required footer sections are present (Strengths, Merge Recommendation,
+  Top Risks, Suggested Additional Tests)
+- No local filesystem paths (use repo-relative `path:line`)
+- No mixed top-level/inline formatting
+- Sub-80 findings are suppressed unless security/data-safety risk
+
+### Review State Fallback
+If the platform blocks the intended formal review state:
+- Prefer a `COMMENT` review submission if supported.
+- Otherwise use a standalone PR conversation comment.
+- Keep the same textual merge recommendation in the body.
+- Add a one-line note: `Formal review state unavailable: <reason>`.
+
+### GitHub Reference Rules
+- Never use local filesystem paths in GitHub review comments.
+- Use repo-relative `path:line` references or GitHub links.
+- When a finding spans multiple locations, list each affected location
+  separately.
+
+## Pre-Commit Documentation Checklist
+
+Before every commit:
+
+1. Check if changes affect `docs/architecture.md`. If yes, update it.
+2. Check if `README.md` needs updating (CLI usage, setup, env vars, API
+   endpoints, project structure). If yes, update it.
+3. Do not finalize a commit until docs are consistent with code changes.
