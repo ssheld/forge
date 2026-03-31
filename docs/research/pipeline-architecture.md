@@ -359,6 +359,117 @@ approach, and Composio's plugin architecture:
 
 Already established in `docs/mvp-design.md` and validated by the research.
 
+## Additional Tool Analysis (March 2026)
+
+### codex-plugin-cc (OpenAI Official)
+
+[codex-plugin-cc](https://github.com/openai/codex-plugin-cc) (4.9k stars)
+is OpenAI's official plugin that lets Claude Code delegate work to Codex
+CLI. Released March 2026. One-way bridge -- Claude Code dispatches
+tasks/reviews to Codex running on the same machine. Codex doesn't know
+it's being orchestrated.
+
+**Patterns relevant to Forge:**
+
+- **Broker/multiplexer:** A TCP/Unix socket multiplexer shares a single
+  Codex runtime across multiple concurrent plugin invocations. Serializes
+  requests, tracks stream ownership, passes interrupts through. Directly
+  applicable to Forge managing parallel agent sessions.
+- **Stop gate (quality gate before session end):** The `Stop` hook runs
+  a Codex review of Claude's work before allowing the session to end. If
+  the review finds issues, it blocks with
+  `{"decision": "block", "reason": "..."}`. This is exactly the pre-PR
+  review gate pattern Forge designed for Phase 1.
+- **"Thin forwarder" pattern:** When delegating to an external agent, the
+  forwarding layer is deliberately dumb -- no interpretation, no
+  summarization, just pass-through. Prevents the orchestrator from
+  corrupting agent results.
+- **Prompt-as-configuration:** Commands, agents, and skills are all
+  markdown files. Behavior changes by editing text, not code. Similar to
+  better-symphony's workflow-as-markdown pattern.
+- **Zero dependencies:** Entire runtime uses only Node.js built-ins
+  (`node:child_process`, `node:net`, `node:fs`). Strong signal about
+  what's achievable without frameworks.
+- **Prompt contract tests:** Tests verify that prompt markdown files
+  contain specific phrases and instructions. Novel approach to testing
+  prompt engineering as contracts.
+
+**Limitations:** No DAG/pipeline or fanout-merge orchestration, no GitHub
+integration at the plugin layer, no worktree management. Supports
+background jobs and concurrent broker invocations, but lacks structured
+multi-step workflow coordination.
+
+### AgentFlow (shouc/agentflow)
+
+[AgentFlow](https://github.com/shouc/agentflow) (~253 stars, ~715 commits)
+is a Python DAG orchestrator for local CLI coding agents. Think Apache
+Airflow but for Codex/Claude/Kimi. Substantial codebase with a clean
+layered architecture: DSL -> Specs (Pydantic) -> Orchestrator (async) ->
+Agents (adapters) -> Runners (execution targets).
+
+**Patterns relevant to Forge:**
+
+- **`on_failure` back-edges for iterative cycles:** `review.on_failure >>
+  write` creates a bounded cycle with `max_iterations`. When review fails,
+  upstream nodes reset to PENDING and re-execute. The cleanest expression
+  of the review-fix loop found across all tools studied.
+- **Declarative success criteria:** Post-conditions evaluated after
+  execution, independent of exit code: `output_contains: "LGTM"`,
+  `file_exists`, `file_contains`, `file_nonempty`. A node can exit 0 but
+  still "fail" if output doesn't meet criteria. More robust than exit
+  codes for non-deterministic agents.
+- **Fanout/merge as first-class primitives:** `fanout(node, 128)` expands
+  one template into N parallel copies. `merge(node, source, by=["field"])`
+  aggregates results. Handles parallel review across files without manual
+  loop construction.
+- **Pipeline-as-JSON intermediate:** Python DSL generates JSON. Orchestrator
+  only consumes JSON. Pipeline is fully inspectable and validatable before
+  execution (`agentflow validate`, `agentflow inspect`). Clean separation
+  of definition from execution.
+- **Scratchboard:** A shared markdown file all agents can read/append to
+  with line-level deduplication. Simple weak coordination without a
+  message bus. Useful for lightweight inter-agent context sharing.
+- **Git worktree per node:** Each parallel agent gets an isolated worktree.
+  Diffs captured per-node as artifacts. Critical for parallel coding
+  agents editing files concurrently.
+- **PreparedExecution / Runner separation:** Clean split between "what to
+  run" (agent adapter: Codex, Claude, Kimi) and "where to run" (runner:
+  local, SSH, EC2, ECS, Docker). Add new agents or execution targets
+  independently. Maps to Forge's Provider + future Node concepts.
+- **Normalized trace events:** Each agent's output stream is parsed into
+  a common `NormalizedTraceEvent` model. Makes monitoring agent-agnostic.
+- **File-based cancellation:** `cancel.requested` sentinel file plus
+  in-memory threading events. Survives process crashes, can be triggered
+  externally (e.g., by a monitoring script touching the file).
+- **Periodic controller nodes:** A monitor node runs on a timer, inspects
+  fanout group status, and emits cancel/rerun commands for individual
+  members. Runtime adaptive control within a running pipeline.
+
+**Limitations:** No GitHub integration (PRs, issues, reviews). No
+structured data flow between nodes (only Jinja2 string interpolation in
+prompts). No diff merging or conflict resolution across parallel agents.
+Very large monolithic files suggesting rapid development without
+decomposition.
+
+### Top 5 Ideas Across Both Repos
+
+1. **`on_failure` back-edges with `max_iterations`** (AgentFlow) -- The
+   cleanest review-fix loop expression. Forge's reviewer job should work
+   this way.
+2. **Stop gate / quality gate hooks** (codex-plugin-cc) -- Agent B reviews
+   Agent A's work before allowing completion. Maps directly to Forge's
+   Phase 1 pre-PR review.
+3. **Declarative success criteria** (AgentFlow) -- Let users define "done"
+   as post-conditions rather than just exit codes. More robust for
+   non-deterministic agents.
+4. **Broker pattern for shared runtime** (codex-plugin-cc) -- Multiplexing
+   concurrent invocations through one agent process. Relevant when Forge
+   manages parallel issue lanes.
+5. **PreparedExecution / Runner separation** (AgentFlow) -- "What to run"
+   vs "where to run" as independent axes. Forge already has Provider
+   adapters; adding Runner adapters (local, SSH, Docker) gives hardware
+   modularity cleanly.
+
 ## Sources
 
 ### CI/CD Pipeline Patterns
@@ -391,3 +502,5 @@ Already established in `docs/mvp-design.md` and validated by the research.
 - [ide-agent-kit](https://github.com/ThinkOffApp/ide-agent-kit)
 - [claude-hub](https://github.com/claude-did-this/claude-hub)
 - [Merlin](https://github.com/Arunachalamkalimuthu/merlin-ai-code-review)
+- [codex-plugin-cc](https://github.com/openai/codex-plugin-cc)
+- [AgentFlow](https://github.com/shouc/agentflow)
