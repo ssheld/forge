@@ -509,14 +509,15 @@ cross-project dependencies.
 
 **Where Forge can differentiate:**
 - **Install friction:** Gas Town requires Go 1.25+, Dolt 1.82+, beads,
-  tmux, sqlite3. Forge could be `pip install forge-cli`.
+  sqlite3; tmux recommended. Forge could aim for a lighter install path.
 - **Complexity:** The metaphor system (GUPP, MEOW, NDI, Polecats, Hooks,
   Convoys, Wasteland) is a steep learning curve. Forge uses conventional
   terminology.
 - **Dependencies:** Dolt is a non-trivial operational dependency. Forge's
   SQLite + files approach is lighter.
-- **tmux-only:** Gas Town is deeply tied to tmux. Forge could be session-
-  manager-agnostic.
+- **tmux-centric:** Gas Town is heavily tmux-dependent for the full
+  workflow (a no-tmux mode exists but is limited). Forge could be
+  session-manager-agnostic.
 - **Config format:** JSON-only is verbose. YAML is friendlier.
 
 ## Additional Tools Surveyed (March 2026)

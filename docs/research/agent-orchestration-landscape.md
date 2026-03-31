@@ -221,7 +221,7 @@ Key differences from Forge's approach:
 - Dolt (version-controlled SQL) vs Forge's SQLite + files
 - Custom issue tracker (Beads, 20k stars) vs GitHub Issues
 - Elaborate metaphor system vs conventional terminology
-- Heavy install (Go + Dolt + tmux + beads) vs `pip install`
+- Heavy install (Go + Dolt + beads; tmux recommended) vs lighter install path
 
 Worth trying before implementation to understand the UX tradeoffs.
 
