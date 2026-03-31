@@ -394,9 +394,10 @@ it's being orchestrated.
   contain specific phrases and instructions. Novel approach to testing
   prompt engineering as contracts.
 
-**Limitations:** No DAG/pipeline, no parallel jobs, no GitHub integration,
-no worktree management, no multi-agent negotiation. Strictly one agent
-delegating to one other agent.
+**Limitations:** No DAG/pipeline or fanout-merge orchestration, no GitHub
+integration at the plugin layer, no worktree management. Supports
+background jobs and concurrent broker invocations, but lacks structured
+multi-step workflow coordination.
 
 ### AgentFlow (shouc/agentflow)
 
