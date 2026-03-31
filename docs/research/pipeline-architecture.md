@@ -470,6 +470,186 @@ decomposition.
    adapters; adding Runner adapters (local, SSH, Docker) gives hardware
    modularity cleanly.
 
+## Gas Town (steveyegge/gastown) -- Closest Direct Peer
+
+[Gas Town](https://github.com/steveyegge/gastown) (13k stars, Go, MIT)
+is a 200k+ line CLI orchestrator by Steve Yegge. Uses the same core
+primitives as Forge: git worktrees for isolation, issue tracking as
+workflow substrate, human gates, multi-agent orchestration.
+
+**Key architectural patterns:**
+
+- **Bare repo + worktree:** Each project ("rig") has a bare repo
+  (`.repo.git`) as a shared object store. All worktrees are cheap
+  branches off this bare repo. More efficient than standard worktrees.
+- **Three-layer agent model:** Identity (permanent bead in database) /
+  Sandbox (persistent worktree, reused across sessions) / Session
+  (ephemeral tmux session). Clean lifecycle separation.
+- **Bors-style merge queue ("Refinery"):** Batches MRs, tests the merged
+  stack, bisects on failure to isolate the culprit. Can fix inline or
+  re-dispatch. The most complete AI merge queue found.
+- **TOML workflow templates ("Formulas"):** 48 built-in templates with
+  step dependencies, variable substitution, two modes (lightweight inline
+  vs checkpointed sub-tasks that survive crashes). Key formula:
+  `mol-polecat-work` (7 steps: load-context -> branch-setup -> implement
+  -> commit -> self-review -> build-check -> submit).
+- **Three-tier health monitoring:** Boot dog (5min heartbeat) -> Deacon
+  (cross-project patrol) -> Witness (per-project agent monitor). Auto-
+  recovery via nudge, handoff, or nuke.
+- **GUPP propulsion principle:** "If it's on your hook, you MUST run it."
+  Simple rule that drives autonomous operation.
+- **Seance:** Agents query previous sessions for context recovery.
+- **Mail + nudge system:** Persistent messages via Dolt database + real-
+  time delivery via tmux keystroke injection.
+
+**Companion: [Beads](https://github.com/steveyegge/beads)** (20k stars)
+is a standalone git-backed issue tracker built on Dolt (version-controlled
+SQL database). Full lifecycle, dependency tracking, formulas, compaction,
+cross-project dependencies.
+
+**Where Forge can differentiate:**
+- **Install friction:** Gas Town requires Go 1.25+, Dolt 1.82+, beads,
+  sqlite3; tmux recommended. Forge could aim for a lighter install path.
+- **Complexity:** The metaphor system (GUPP, MEOW, NDI, Polecats, Hooks,
+  Convoys, Wasteland) is a steep learning curve. Forge uses conventional
+  terminology.
+- **Dependencies:** Dolt is a non-trivial operational dependency. Forge's
+  SQLite + files approach is lighter.
+- **tmux-centric:** Gas Town is heavily tmux-dependent for the full
+  workflow (a no-tmux mode exists but is limited). Forge could be
+  session-manager-agnostic.
+- **Config format:** JSON-only is verbose. YAML is friendlier.
+
+## Additional Tools Surveyed (March 2026)
+
+### Git-Native Peers
+
+**[lalph](https://github.com/tim-smart/lalph)** (106 stars, TypeScript)
+- Issue-driven orchestrator with GitHub Issues and Linear backends
+- Key pattern: **prd.yml as agent-editable state** -- agents communicate
+  state changes by editing a watched YAML file, filesystem watcher syncs
+  bi-directionally with the issue source
+- **AI-driven task selection:** A "chooser" agent picks the most important
+  task, not FIFO
+- **Stall timeout + auto-decomposition:** If an agent stalls, a separate
+  agent breaks the task into smaller pieces
+- Three git flow strategies: PR, direct commit (rebase+push), spec-driven
+
+**[operator](https://github.com/untra/operator)** (10 stars, Rust)
+- TUI for supervising parallel agent lanes via tmux/zellij
+- **Terminal multiplexer as supervision layer:** Launch agents in panes,
+  monitor via screen capture. Natural human observability.
+- **Ticket-as-file:** Markdown with YAML frontmatter in `.tickets/queue/`
+- **Same-project sequential, cross-project parallel:** Simple conflict-
+  prevention rule
+
+**[parallel-worktrees](https://github.com/SpillwaveSolutions/parallel-worktrees)** (6 stars)
+- Claude Code skill (SKILL.md + 3 bash scripts)
+- **Non-determinism exploitation:** Run N agents on same task, pick best
+  result. Treats LLM randomness as an advantage.
+- `.agent-status/*.json` for zero-dependency coordination
+- Proves the concept works with zero dependencies
+
+### Major Platforms
+
+**[OpenHands](https://github.com/All-Hands-AI/OpenHands)** (70k stars)
+- Formerly OpenDevin. AI software development platform.
+- **EventStream as central bus:** Typed Action/Observation events with
+  serialization, enabling replay and persistence
+- **Issue Resolver pipeline:** Complete issue-to-PR pipeline with multi-
+  platform support (GitHub, GitLab, Bitbucket, Azure DevOps)
+- **Stuck detection:** Dedicated 21KB module that programmatically detects
+  agent loops
+- **Runtime abstraction:** Pluggable runtimes (Docker, local, remote,
+  Modal). Does NOT use worktrees -- uses containers for isolation.
+
+**[MetaGPT](https://github.com/geekan/MetaGPT)** (66k stars)
+- Models a "software company" as a multi-agent system.
+- **Publish-subscribe role routing:** Roles produce messages tagged with
+  `cause_by`; other roles `_watch()` for specific action types. Creates
+  implicit DAGs without hard-coded sequencing.
+- **Three react modes:** BY_ORDER (sequential), REACT (LLM chooses),
+  PLAN_AND_ACT (plan first, then execute)
+- **LGTM/LBTM code review loop:** Structured review with clear pass/fail
+  signaling and configurable iteration count (default 2 rounds)
+- **Team serialization:** Save/restore multi-agent workflows for
+  resumability. Does NOT use worktrees.
+
+### Lightweight / Policy-Driven
+
+**[Atomic Agents](https://github.com/BrainBlend-AI/atomic-agents)** (5.8k stars)
+- Entire agent runtime in ~1100 lines. Built on Instructor + Pydantic.
+- **Schema chaining:** Output Pydantic schema of one agent IS the input
+  schema of the next. Catches integration bugs at definition time.
+- **No orchestration layer by design:** "Orchestration is your code."
+  Closest to Forge's "thin controller" principle.
+- **Context providers:** Dynamic system prompt injection at runtime.
+
+**[Orloj](https://github.com/OrlojHQ/orloj)** (62 stars, Go, v0.4.0)
+- Kubernetes-style declarative runtime for multi-agent AI systems.
+- **YAML manifests for everything:** Agents, tools, model endpoints,
+  governance policies declared as `apiVersion/kind/metadata/spec`.
+- **Model endpoint indirection:** Agents reference models by name, not
+  provider details. One YAML change swaps all providers.
+- **Governance as data:** AgentPolicy, ToolPermission, ToolApproval as
+  declarative resources. Full RBAC.
+- Over-built for Forge's current stage but the concepts are sound.
+
+**[OpenAI Swarm](https://github.com/openai/swarm)** (21k stars, deprecated)
+- **Handoff-as-return-value:** Agent routing by having functions return
+  the next Agent. No routing table, no orchestrator. ~400 lines total.
+- **Context variables as hidden state:** Shared dict readable by tools
+  but invisible to the LLM.
+- Now deprecated in favor of OpenAI Agents SDK.
+
+### Research Papers
+
+**[CAID](https://github.com/JiayiGeng/CAID)** (CMU, arXiv 2603.21489)
+- Dependency-aware task delegation with parallel git worktree execution
+- Central manager builds dependency graph, dispatches when prerequisites
+  met. Built on OpenHands. 14-27% gains depending on benchmark.
+
+**[AgentConductor](https://arxiv.org/abs/2602.17100)** (Feb 2026)
+- RL-optimized dynamic communication topology generation. 68% token
+  savings. Adaptive difficulty-based parallelism.
+
+**[Agyn](https://arxiv.org/abs/2602.01465)** (Feb 2026)
+- Manager/Researcher/Engineer/Reviewer team roles with isolated sandboxes
+  and native GitHub PR/review flows. Custom `gh-pr-review` CLI extension.
+
+### Anthropic 2026 Agentic Coding Trends Report
+
+[18-page report](https://resources.anthropic.com/2026-agentic-coding-trends-report)
+(January 2026) identifies 8 trends. Most relevant to Forge:
+- Trend #2: Single agents evolve into coordinated teams
+- Trend #3: Long-running agents build complete systems
+- Trend #4: Human oversight scales through intelligent collaboration
+Validates Forge's direction: local-first, multi-agent, human-gated.
+
+### Protocol Landscape (March 2026)
+
+- **MCP** (Model Context Protocol): 97M monthly SDK downloads. Donated to
+  Linux Foundation. The standard for agent-to-tool connectivity.
+- **A2A** (Agent-to-Agent): Google protocol, v0.3, Linux Foundation, 50+
+  partners. Focused on enterprise agent interop, not coding worktree
+  handoffs. Not needed for Forge v1.
+
+## Tools Worth Trying
+
+Before borrowing patterns, these tools are worth actually using to
+understand how they feel in practice, not just how they look in source:
+
+1. **Gas Town** -- Closest peer. Try the full flow: install, create a rig,
+   sling work to a polecat, watch the review-merge cycle.
+2. **Night-watch-cli** -- Most complete job system. Try: queue a PRD,
+   watch executor run, see the reviewer score and iterate.
+3. **lalph** -- Try the prd.yml bidirectional sync pattern. See how agent-
+   editable state files feel vs explicit API calls.
+4. **Overstory** -- Try spawning a reviewer with tool guards. See how
+   read-only enforcement works in practice.
+5. **AgentFlow** -- Try the `on_failure` back-edge pattern for a review-
+   fix loop. See how declarative success criteria feel.
+
 ## Sources
 
 ### CI/CD Pipeline Patterns
@@ -504,3 +684,18 @@ decomposition.
 - [Merlin](https://github.com/Arunachalamkalimuthu/merlin-ai-code-review)
 - [codex-plugin-cc](https://github.com/openai/codex-plugin-cc)
 - [AgentFlow](https://github.com/shouc/agentflow)
+- [Gas Town](https://github.com/steveyegge/gastown)
+- [Beads](https://github.com/steveyegge/beads)
+- [CAID](https://github.com/JiayiGeng/CAID) (CMU paper: arXiv 2603.21489)
+- [AgentConductor](https://arxiv.org/abs/2602.17100)
+- [Agyn](https://arxiv.org/abs/2602.01465)
+- [lalph](https://github.com/tim-smart/lalph)
+- [operator](https://github.com/untra/operator)
+- [parallel-worktrees](https://github.com/SpillwaveSolutions/parallel-worktrees)
+- [OpenHands](https://github.com/All-Hands-AI/OpenHands)
+- [MetaGPT](https://github.com/geekan/MetaGPT)
+- [Atomic Agents](https://github.com/BrainBlend-AI/atomic-agents)
+- [Orloj](https://github.com/OrlojHQ/orloj)
+- [OpenAI Swarm](https://github.com/openai/swarm) (deprecated)
+- [smolagents](https://github.com/huggingface/smolagents)
+- [Anthropic 2026 Agentic Coding Trends Report](https://resources.anthropic.com/2026-agentic-coding-trends-report)

@@ -208,6 +208,23 @@ local, zero-cost review using local models:
 Forge is right to be platform-agnostic at the adapter level (GitHub-first
 with clean boundaries for future adapters).
 
+## Gas Town (steveyegge/gastown) -- Closest Direct Peer
+
+[Gas Town](https://github.com/steveyegge/gastown) (13k stars) is the
+most directly comparable project to Forge. Uses git worktrees, local
+agent dispatch, issue tracking as workflow substrate, and human gates.
+See [pipeline-architecture.md](pipeline-architecture.md) for the full
+deep dive.
+
+Key differences from Forge's approach:
+- 200k+ lines of Go vs Forge's planned thin Python CLI
+- Dolt (version-controlled SQL) vs Forge's SQLite + files
+- Custom issue tracker (Beads, 20k stars) vs GitHub Issues
+- Elaborate metaphor system vs conventional terminology
+- Heavy install (Go + Dolt + beads; tmux recommended) vs lighter install path
+
+Worth trying before implementation to understand the UX tradeoffs.
+
 ## Implications for Forge
 
 See [DEC-001](../decisions/DEC-001-review-stage-phasing.md) for the
